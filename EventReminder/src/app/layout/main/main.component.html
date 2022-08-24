@@ -1,0 +1,62 @@
+<form [formGroup]="mainForm">
+    <div formArrayName="alerts">
+        <div class="row">
+            <div class="col-sm-4">
+                <button mat-fab color="primary" aria-label="Add Alert setting" (click)="addRow()">
+                    <mat-icon>add</mat-icon>
+                </button>
+            </div>
+        </div>
+        <div *ngFor="let alert of alerts.controls; let i = index">
+            <mat-grid-list cols="12" gutterSize="10px" [formGroupName]="i">
+                <mat-grid-tile colspan="1" rowspan="1">
+                    <section class="example-section">
+                        <mat-checkbox class="example-margin" color="primary" formControlName="alerEnabled">&nbsp;
+                        </mat-checkbox>
+                    </section>
+                </mat-grid-tile>
+
+                <mat-grid-tile colspan="4" rowspan="1">
+                    <mat-form-field appearance="fill" style="width: 100%">
+                        <mat-label>Alert Name</mat-label>
+                        <input matInput placeholder="Alert Name" formControlName="alertName">
+                    </mat-form-field>
+                </mat-grid-tile>
+
+                <mat-grid-tile colspan="4" rowspan="1">
+                    <mat-form-field appearance="fill" style="width: 100%">
+                        <mat-label>Ringtone</mat-label>
+                        <mat-select formControlName="alertRingtone">
+                            <mat-option *ngFor="let ringtone of this.ringtones" [value]="ringtone.fileName">
+                                {{ringtone.displayName}}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </mat-grid-tile>
+
+                <mat-grid-tile colspan="1" rowspan="1">
+                    <mat-form-field appearance="fill" style="width: 100%" style="width: 100%">
+                        <mat-label>Alert Interval</mat-label>
+                        <input matInput formControlName="alertInterval">
+                    </mat-form-field>
+                </mat-grid-tile>
+
+                <mat-grid-tile colspan="1" rowspan="1">
+                    <span>{{alert.get('alertTimer')?.value}}</span>
+                    <button mat-icon-button aria-label="Remove Alert" (click)="removeAlert(i)">
+                        <mat-icon>delete</mat-icon>
+                    </button>
+                </mat-grid-tile>
+            </mat-grid-list>
+        </div>
+    </div>
+
+
+    <div class="row">
+
+        <div class="col-sm-4">
+            <button type="button" class="btn btn-danger" (click)="this.start()">Stop/Start</button>
+        </div>
+
+    </div>
+</form>
