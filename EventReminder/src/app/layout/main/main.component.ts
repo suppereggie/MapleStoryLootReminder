@@ -163,7 +163,6 @@ export class MainComponent implements OnInit, OnDestroy {
           (form.controls['alertInterval'].value as number) - 1
         );
       }
-      console.log(currentTimerValue);
     }, 1000);
     this.timerMap.set(timerTag, timer);
   }

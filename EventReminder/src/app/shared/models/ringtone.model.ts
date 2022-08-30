@@ -5,7 +5,7 @@ export class Ringtone {
 
     public constructor(displayName?: string, fileName?: string) {
         this.displayName = displayName ?? '';
-        this.fileName = fileName != null ? `/assets/${fileName}` : '';
+        this.fileName = fileName != null ? `/MapleStoryLootReminder/assets/${fileName}` : '';
     }
 
     
