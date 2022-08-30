@@ -17,9 +17,17 @@ import { MatIconModule } from '@angular/material/icon';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
+import { VimeModule } from '@vime/angular';
+import { PlayerComponent } from './player/player.component';
+import { ReloadDirective } from '../shared/components/reload-directive.directive';
 
 @NgModule({
-  declarations: [LayoutComponent, MainComponent],
+  declarations: [
+    LayoutComponent,
+    MainComponent,
+    PlayerComponent,
+    ReloadDirective,
+  ],
   imports: [
     CommonModule,
     FormsModule,
@@ -34,9 +42,11 @@ import { MatButtonModule } from '@angular/material/button';
     MatIconModule,
     MatToolbarModule,
     MatButtonModule,
+    VimeModule,
   ],
   providers: [
     { provide: ErrorStateMatcher, useClass: ShowOnDirtyErrorStateMatcher },
   ],
+  exports: [PlayerComponent, ReloadDirective],
 })
 export class LayoutModule {}

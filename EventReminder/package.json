@@ -20,8 +20,11 @@
     "@angular/platform-browser": "^14.1.0",
     "@angular/platform-browser-dynamic": "^14.1.0",
     "@angular/router": "^14.1.0",
+    "@vime/angular": "^5.3.1",
+    "@vime/core": "^5.3.1",
     "bootstrap": "^5.2.0",
     "font-awesome": "^4.7.0",
+    "guid-typescript": "^1.0.9",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.11.4"

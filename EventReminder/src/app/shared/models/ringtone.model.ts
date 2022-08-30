@@ -3,8 +3,10 @@ export class Ringtone {
     public displayName: string;
     public fileName: string;
 
-    public constructor() {
-        this.displayName = '';
-        this.fileName = '';
+    public constructor(displayName?: string, fileName?: string) {
+        this.displayName = displayName ?? '';
+        this.fileName = fileName != null ? `/assets/${fileName}` : '';
     }
+
+    
 }

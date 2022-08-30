@@ -48,14 +48,21 @@
                     </button>
                 </mat-grid-tile>
             </mat-grid-list>
+            <div *reload-key="alert.get('alertRingtone')?.value" hidden>
+                <app-player *ngIf="alert.get('alertRingtone')?.value && alert.get('alertRingtone')?.value!=null"
+                            [id]="alert.get('timerTag')?.value" [path]="alert.get('alertRingtone')?.value"></app-player>
+            </div>
+
         </div>
     </div>
+
+
 
 
     <div class="row">
 
         <div class="col-sm-4">
-            <button type="button" class="btn btn-danger" (click)="this.start()">Stop/Start</button>
+            <button type="button" class="btn btn-danger" (click)="this.start()">{{this.timerStarted ? 'Stop' : 'Start'}}</button>
         </div>
 
     </div>

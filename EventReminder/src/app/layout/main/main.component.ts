@@ -1,5 +1,12 @@
 import { formatCurrency } from '@angular/common';
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+  OnInit,
+  QueryList,
+  ViewChild,
+  ViewChildren,
+} from '@angular/core';
 import {
   FormArray,
   FormBuilder,
@@ -8,9 +15,12 @@ import {
   Validators,
 } from '@angular/forms';
 import { Observable, Subscribable, Subscription } from 'rxjs';
-import { AlterRecordModel } from 'src/app/shared/models/alterRecord.model';
+import { AlterRecordModel } from 'src/app/shared/models/alertRecord.model';
 import { Ringtone } from 'src/app/shared/models/ringtone.model';
-import { Guid } from 'typescript-guid';
+import { Guid } from 'guid-typescript';
+import { RingtoneList } from 'src/app/shared/static/ringtone-list';
+import { Player } from '@vime/angular';
+import { PlayerComponent } from '../player/player.component';
 
 @Component({
   templateUrl: './main.component.html',
@@ -24,19 +34,15 @@ export class MainComponent implements OnInit, OnDestroy {
   timerStarted: boolean = false;
   timerMap: Map<string, any> = new Map([]);
 
+  @ViewChildren(PlayerComponent) players!: QueryList<PlayerComponent>;
+
   // Getter for formArry
   get alerts(): FormArray {
     return this.mainForm.get('alerts') as FormArray;
   }
 
   constructor(private fb: FormBuilder) {
-    this.ringtones = [
-      { displayName: 'loot', fileName: 'loot.mp3' },
-      { displayName: 'mvp', fileName: 'mvp.mp3' },
-      { displayName: 'exp', fileName: 'exp.mp3' },
-      { displayName: 'other', fileName: 'other.mp3' },
-      { displayName: 'pew', fileName: 'pew.mp3' },
-    ];
+    this.ringtones = RingtoneList.ringtones;
   }
 
   ngOnDestroy(): void {}
@@ -70,7 +76,7 @@ export class MainComponent implements OnInit, OnDestroy {
   removeAlert(i: number) {
     var formGroup = this.alerts.at(i) as FormGroup;
     var timertag = formGroup.controls['timerTag']?.value;
-    if(timertag && timertag != null){
+    if (timertag && timertag != null) {
       this.clearTimer(timertag);
     }
 
@@ -78,8 +84,8 @@ export class MainComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 
-   * @param input 
+   *
+   * @param input
    * @returns fromGroup
    */
   private newAlert(input: AlterRecordModel): FormGroup {
@@ -88,7 +94,7 @@ export class MainComponent implements OnInit, OnDestroy {
       alertRingtone: new FormControl(input.alertRingtone, [
         Validators.required,
       ]),
-      alerEnabled: new FormControl(input.alerEnabled, []),
+      alerEnabled: new FormControl(input.alertEnabled, []),
       alertInterval: new FormControl(input.alertInterval, [
         Validators.required,
       ]),
@@ -98,7 +104,6 @@ export class MainComponent implements OnInit, OnDestroy {
 
     let checkboxChange = form.controls.alerEnabled.valueChanges.subscribe(
       (e) => {
-
         // case that start event timer, and the check box is toggled
         if (e && this.timerStarted) {
           // start timer
@@ -114,11 +119,21 @@ export class MainComponent implements OnInit, OnDestroy {
       }
     );
 
-    let intervalChange = form.controls.alertInterval.valueChanges.subscribe((e) => {
-      form.controls.alertTimer.setValue(e);
-    })
+    let intervalChange = form.controls.alertInterval.valueChanges.subscribe(
+      (e) => {
+        form.controls.alertTimer.setValue(e);
+      }
+    );
 
-    this.subscribes.push(checkboxChange);
+    let alertRingtoneChange = form.controls.alertRingtone.valueChanges.subscribe(
+      (e) => {
+        form.controls.alertRingtone.setValue(null, {emitEvent: false});
+        debugger
+        form.controls.alertRingtone.setValue(e, {emitEvent: false});
+      }
+    );
+
+    this.subscribes.push(checkboxChange, intervalChange,alertRingtoneChange);
     return form;
   }
 
@@ -131,23 +146,30 @@ export class MainComponent implements OnInit, OnDestroy {
     }
   }
 
-  startTimer(form: FormGroup) {
+  private startTimer(form: FormGroup) {
+    // create guid for the timer
+    let timerTag = Guid.create().toString();
+    form.controls['timerTag'].setValue(timerTag);
+    // create timer
     var timer = setInterval(() => {
       let currentTimerValue = form.controls['alertTimer'].value as number;
       if (currentTimerValue > 0) {
+        // current time minus one
         form.controls['alertTimer'].setValue(currentTimerValue - 1);
       } else {
-        window.alert(`${form.controls['alertName'].value} --- triggered`);
-        form.controls['alertTimer'].setValue(form.controls['alertInterval'].value as number - 1);
+        // trigger event
+        this.players.find((e) => e.id == timerTag)?.start();
+        form.controls['alertTimer'].setValue(
+          (form.controls['alertInterval'].value as number) - 1
+        );
       }
       console.log(currentTimerValue);
     }, 1000);
-    let timerTag = Guid.create().toString();
-    form.controls['timerTag'].setValue(timerTag);
     this.timerMap.set(timerTag, timer);
   }
 
   clearTimer(timerTag: string) {
+    this.players.find((e) => e.id == timerTag)?.stop();
     let timer = this.timerMap.get(timerTag);
     clearInterval(timer);
     this.timerMap.delete(timerTag);
@@ -155,16 +177,19 @@ export class MainComponent implements OnInit, OnDestroy {
 
   start() {
     this.timerStarted = !this.timerStarted;
-    if(this.timerStarted){
+    if (this.timerStarted) {
       for (const formGroup of this.alerts.controls) {
-        if((formGroup.get('alerEnabled')?.value ?? false) && Number.parseInt(formGroup.get('alertInterval')?.value ?? 0) > 0) {
+        if (
+          (formGroup.get('alerEnabled')?.value ?? false) &&
+          Number.parseInt(formGroup.get('alertInterval')?.value ?? 0) > 0
+        ) {
           this.startTimer(formGroup as FormGroup);
         }
       }
     } else {
-      this.timerMap.forEach((timer,key) => {
+      this.timerMap.forEach((timer, key) => {
         this.clearTimer(key);
-      })
+      });
       for (const formGroup of this.alerts.controls) {
         let originInterval = formGroup.get('alertInterval')?.value;
         let timerTag = formGroup.get('timerTag')?.value ?? '';
@@ -172,5 +197,16 @@ export class MainComponent implements OnInit, OnDestroy {
         formGroup.get('alertTimer')?.setValue(originInterval);
       }
     }
+  }
+
+  testPlay(timerTag: string) {
+    this.players.find((e) => e.id == timerTag)?.start();
+  }
+
+  getRingtonePath(ringtoneName: string): string {
+    debugger;
+    var ringtone =
+      this.ringtones.find((e) => e.displayName == ringtoneName)?.fileName ?? '';
+    return ringtone;
   }
 }
